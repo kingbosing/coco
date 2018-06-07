@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="node_modules//element-ui/lib/theme-chalk/index.css">
+  <script src='node_modules/jquery/dist/jquery.min.js'></script>
+
+  <script src='node_modules/vue/dist/vue.js'></script>
+  <script src='node_modules/element-ui/lib/index.js'></script>
+  <style>
+    .el-tree-node__content,
+    .theCell {
+      height: 60px;
+      line-height: 60px;
+    }
+
+    .el-dialog__header {
+      padding: 20px 20px 10px;
+      background: #dedede;
+    }
+
+    .el-dialog__body {
+      padding: 0px 20px;
+      color: #606266;
+      font-size: 14px;
+      overflow: hidden;
+    }
+
+    .theCell img {
+      height: 40px;
+      width: 40px;
+      border-radius: 50%;
+      float: left;
+      margin: 10px;
+    }
+
+    .el-checkbox__input.is-checked .el-checkbox__inner,
+    .el-checkbox__input.is-indeterminate .el-checkbox__inner {
+      background-color: #f99740;
+      border-color: #f99740;
+    }
+
+    .el-checkbox__inner:hover {
+      border-color: #f99740;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div id="app">
+
+    <button v-on:click="centerDialogVisible=true">open</button>
+
+    <el-dialog title="确定参与" :visible.sync="centerDialogVisible" width="800px" id="isSureAdd">
+
+      <div style="width:50%;float:left;height:500px;">
+        <p>可选人员</p>
+        <div style="height:450px;overflow:auto">
+        <el-tree :data="loadNode1 " show-checkbox ref="Deptree" :props="props1" :check-strictly="false" node-key="ItemId" default-expand-all
+          :expand-on-click-node="false" v-on:check-change="currentChange">
+          <span class="custom-tree-node " slot-scope="{ node, data }">
+            <span class='theCell'>
+              <img v-bind:src="getFace(data.HeadUrl)" alt="" v-if="data.HeadUrl">{{ node.label }}</span>
+
+          </span>
+        </el-tree>
+        </div>
+      </div>
+      <div style="width:45%;float:right;height:500px;">
+        <p>已选人员</p>
+        <div style="height:450px;overflow:auto">
+        <p v-for="k in actDep" v-if="k.HeadUrl" class="theCell">
+          <img v-bind:src="getFace(k.HeadUrl)" alt=""> {{k.Name}}
+          <span class="el-icon-close" v-on:click="toDelete(k.ItemId)"></span>
+        </p>
+        </div>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button size="small" v-on:click="centerDialogVisible = false">取 消</el-button>
+        <el-button type="warning" size="small" v-on:click="isOk">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+
+
+
+
+
+
+
+
+
+  <script>
+    function format(data, x, y) {
+      var s;
+      if (data) {
+        s = data.replace('{0}', x).replace('{1}', y).replace('{2}', 'o');
+        return s;
+      }
+    };
+
+    var bg = 'http://img.work-oa.com/';
+    var app = new Vue({
+      el: '#app',
+      data: {
+        loadNode1: [],
+        centerDialogVisible: false,
+        props1: {
+          children: 'Childrens',
+          label: 'Name'
+        },
+        loadNode1: [],
+        getCheckedNodes: [],
+        defaultArr: ['UzA0'],
+        actDep: [],
+        bg: 'http://img.work-oa.com/'
+      },
+      watch: {
+        actDep: function () {
+        //   this.$refs.Deptree.setCheckedNodes(this.actDep);
+        }
+      },
+      methods: {
+        isOk() {
+          
+            console.log(this.actDep)
+            this.centerDialogVisible=false;
+        },
+        currentChange() {
+          this.actDep = this.$refs.Deptree.getCheckedNodes();
+        },
+        getFace(data) {
+          return this.bg + format(data, 40, 40);
+        },
+        toDelete(data) {
+          var that = this;
+        //   console.log(data)
+          var listArr=[];
+          var listId=[];
+          for (var i = 0; i < this.actDep.length; i++) {
+            if (this.actDep[i].ItemId != data&&this.actDep[i].HeadUrl) {
+                listArr.push(this.actDep[i])
+                listId.push(this.actDep[i].ItemId)
+            }
+          }
+          this.actDep=listArr;
+        //   console.info(this.actDep)
+          this.$refs.Deptree.setCheckedNodes(this.actDep);
+        }
+      }
+    })
+
+    var url =
+      'http://webapi.work-oa.com/api/Employee/GetCompanyAllTree?deptId=UzgF&isGetPerson=true&baseRequest.token=4c79b3fcca834ce3bd4018f492f16c1b'
+    $.ajax({
+      url: url,
+      type: "get",
+      success: function (data) {
+        // console.log(data)
+        var arr = [];
+        arr.push(data.Data)
+        // console.log(arr)
+
+        // console.log(JSON.parse(JSON.stringify(arr)))
+        app.loadNode1 = JSON.parse(JSON.stringify(arr));
+      }
+    })
+
+  </script>
+</body>
+
+</html>
